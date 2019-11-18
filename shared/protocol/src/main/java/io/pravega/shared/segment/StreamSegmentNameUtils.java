@@ -13,7 +13,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.pravega.common.Exceptions;
 import io.pravega.shared.NameUtils;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -86,6 +85,13 @@ public final class StreamSegmentNameUtils {
      */
     private static final String TABLES = "_tables";
     private static final String MARK = "_MARK";
+
+    /**
+     * This is used to parse the segment name.
+     */
+    static final Pattern SEGMENT_TAGS_PATTERN =
+        Pattern.compile("((([\\w\\-\\\\.]+)/)?(([\\w\\-\\\\.]+)/))?(\\w+)(" + Pattern.quote(EPOCH_DELIMITER) + "(\\d+))?");
+
 
     //endregion
 
@@ -390,7 +396,6 @@ public final class StreamSegmentNameUtils {
     // endregion
 
     // region metrics
-
     /**
      * Generate segment tags (string array) on the input fully qualified segment name to be associated with a metric.
      *
@@ -419,9 +424,6 @@ public final class StreamSegmentNameUtils {
         tags[9] = writerId; // update the writer id tag.
         return tags;
     }
-
-    final static Pattern SEGMENT_TAGS_PATTERN =
-        Pattern.compile("((([\\w\\-\\\\.]+)/)?(([\\w\\-\\\\.]+)/))?(\\d+)(\\.#epoch\\.(\\d+))?");
 
     private static String[] updateSegmentTags(String qualifiedSegmentName, String[] tags) {
         final String segmentBaseName = getSegmentBaseName(qualifiedSegmentName);
