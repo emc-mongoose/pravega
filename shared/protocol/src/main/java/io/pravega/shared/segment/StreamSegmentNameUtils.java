@@ -58,7 +58,7 @@ public final class StreamSegmentNameUtils {
     /**
      * This is appended to the end of the Primary Segment Name, followed by epoch.
      */
-    private static final String EPOCH_DELIMITER = ".#epoch.";
+    static final String EPOCH_DELIMITER = ".#epoch.";
 
     /**
      * Format for Container Metadata Segment name.
@@ -425,7 +425,7 @@ public final class StreamSegmentNameUtils {
         return tags;
     }
 
-    private static String[] updateSegmentTags(String qualifiedSegmentName, String[] tags) {
+    static String[] updateSegmentTags(String qualifiedSegmentName, String[] tags) {
         final String segmentBaseName = getSegmentBaseName(qualifiedSegmentName);
         final Matcher m = SEGMENT_TAGS_PATTERN.matcher(segmentBaseName);
         m.find();
@@ -456,7 +456,7 @@ public final class StreamSegmentNameUtils {
      * @param segmentQualifiedName fully qualified segment name.
      * @return the base name of segment.
      */
-    private static String getSegmentBaseName(String segmentQualifiedName) {
+    static String getSegmentBaseName(String segmentQualifiedName) {
         String segmentBaseName = StreamSegmentNameUtils.getParentStreamSegmentName(segmentQualifiedName);
         return (segmentBaseName == null) ? segmentQualifiedName : segmentBaseName;
     }

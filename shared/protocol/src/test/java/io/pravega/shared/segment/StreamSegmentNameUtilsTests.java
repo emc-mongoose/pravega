@@ -18,12 +18,16 @@ import java.util.regex.Matcher;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static io.pravega.shared.segment.StreamSegmentNameUtils.EPOCH_DELIMITER;
 import static io.pravega.shared.segment.StreamSegmentNameUtils.SEGMENT_TAGS_PATTERN;
+import static io.pravega.shared.segment.StreamSegmentNameUtils.TAG_DEFAULT;
 import static io.pravega.shared.segment.StreamSegmentNameUtils.TAG_EPOCH;
 import static io.pravega.shared.segment.StreamSegmentNameUtils.TAG_SCOPE;
 import static io.pravega.shared.segment.StreamSegmentNameUtils.TAG_SEGMENT;
 import static io.pravega.shared.segment.StreamSegmentNameUtils.TAG_STREAM;
 import static io.pravega.shared.segment.StreamSegmentNameUtils.TAG_WRITER;
+import static io.pravega.shared.segment.StreamSegmentNameUtils.getSegmentBaseName;
+import static io.pravega.shared.segment.StreamSegmentNameUtils.updateSegmentTags;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -382,5 +386,48 @@ public class StreamSegmentNameUtilsTests {
         assertNull(m5.group(5));
         assertEquals("0", m5.group(6));
         assertNull(m5.group(8));
+    }
+
+    private static String[] updateSegmentTagsOld(String qualifiedSegmentName, String[] tags) {
+        String segmentBaseName = getSegmentBaseName(qualifiedSegmentName);
+        String[] tokens = segmentBaseName.split("[/]");
+
+        int segmentIdIndex = (tokens.length == 1) ? 0 : (tokens.length) == 2 ? 1 : 2;
+        if (tokens[segmentIdIndex].contains(EPOCH_DELIMITER)) {
+            String[] segmentIdTokens = tokens[segmentIdIndex].split(EPOCH_DELIMITER);
+            tags[5] = segmentIdTokens[0];
+            tags[7] = segmentIdTokens[1];
+        } else {
+            tags[5] = tokens[segmentIdIndex];
+            tags[7] = "0";
+        }
+        if (tokens.length == 3) {
+            tags[1] = tokens[0];
+            tags[3] = tokens[1];
+        } else if (tokens.length == 1) {
+            tags[1] = TAG_DEFAULT;
+            tags[3] = TAG_DEFAULT;
+        } else {
+            tags[1] = TAG_DEFAULT;
+            tags[3] = tokens[0];
+        }
+        return tags;
+    }
+
+    @Test
+    public void testUpdateSegmentTagsPerfOld() {
+        final String[] tags = {
+            TAG_SCOPE, null, TAG_STREAM, null, TAG_SEGMENT, null, TAG_EPOCH, null, TAG_WRITER, null
+        };
+        long nanoTime = System.nanoTime();
+        for(int i = 0; i < 100_000_000; i ++) {
+            updateSegmentTags(
+                System.nanoTime() + "/" + System.nanoTime() + "/" + System.nanoTime() + ".#epoch." +
+                    System.nanoTime(),
+                tags
+            );
+        }
+        nanoTime = System.nanoTime() - nanoTime;
+        System.out.println((double) nanoTime / 1e9);
     }
 }
